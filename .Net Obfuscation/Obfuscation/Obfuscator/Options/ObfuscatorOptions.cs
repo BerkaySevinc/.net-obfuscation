@@ -11,12 +11,9 @@ using dnlib;
 namespace Obfuscation;
 
 
-public class Obfuscator : AssemblyModifier
+public class ObfuscatorOptions
 {
-    public Obfuscator(string inputAssemblyFile) : base(inputAssemblyFile) { }
+    public NameObfuscationType ObfuscationType { get; set; } = NameObfuscationType.Complex;
 
-    public void Obfuscate()
-    {
-        
-    }
+    public bool ObfuscateMethodNames { get; set; } = true;
 }
