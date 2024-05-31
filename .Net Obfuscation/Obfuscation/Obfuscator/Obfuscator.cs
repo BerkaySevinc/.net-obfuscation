@@ -14,32 +14,47 @@ namespace Obfuscation;
 
 // add signiture
 // add logger (event or smth)
-// her type namein vs. farklı olduğundan emin ol (hashsetle vs.) örn: https://stackoverflow.com/questions/4616685/how-to-generate-a-random-string-and-specify-the-length-you-want-or-better-gene
-
+// be sure that every name is different (via hashsetle etc.) e.g: https://stackoverflow.com/questions/4616685/how-to-generate-a-random-string-and-specify-the-length-you-want-or-better-gene
+// make renamer methods simpler
 
 public partial class Obfuscator : AssemblyModifier
 {
     public Obfuscator(string inputAssemblyFile) : base(inputAssemblyFile) { }
+
+
+    public event EventHandler<ObfuscationCompletedEventArgs>? ObfuscationCompleted;
+
+    protected virtual void OnObfuscationCompleted(ObfuscationCompletedEventArgs e) =>
+        ObfuscationCompleted?.Invoke(this, e);
+
 
     public void Obfuscate(ObfuscatorOptions? options = null)
     {
         // Creates default options if given is null.
         options ??= new ObfuscatorOptions();
 
-        // Loops through assembly modules.
-        foreach (var module in Assembly.Modules)
-        {
-            // Loops through types.
-            foreach (var type in module.Types)
-            {
-                // Obfuscates method names.
-                if (options.ObfuscateMethodNames)
-                    ObfuscateMethodNames(type, options);
-            }
-        }
+        // Obfuscates assembly name.
+        if (options.ObfuscateAssemblyName)
+            ObfuscateAssemblyName(options);
 
+        // Obfuscates module names.
+        if (options.ObfuscateModuleNames)
+            ObfuscateModuleNames(options);
+
+        // Obfuscates type names.
+        if (options.ObfuscateTypeNames)
+            ObfuscateTypeNames(options);
+
+        // Obfuscates method names.
+        if (options.ObfuscateMethodNames)
+            ObfuscateMethodNames(options);
+
+        // Obfuscates field names.
+        if (options.ObfuscateFieldNames)
+            ObfuscateFieldNames(options);
+
+        // Obfuscates property names.
+        if (options.ObfuscatePropertyNames)
+            ObfuscatePropertyNames(options);
     }
-
-
-
 }

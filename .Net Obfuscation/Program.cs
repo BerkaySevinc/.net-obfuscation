@@ -13,9 +13,7 @@ Console.ForegroundColor = ConsoleColor.Yellow;
 Console.Write("\n\n\t\tInput an assembly:\n\n\t");
 
 // Gets assembly path.
-//string? assemblyPath = args.Length > 0 ? args[0] : Console.ReadLine()?.Replace("\"", "");
-//! TEMP FOR TESTING
-string assemblyPath = @"C:\Users\Berkay\Desktop\TempTest\Paint 2.exe";
+string? assemblyPath = args.Length > 0 ? args[0] : Console.ReadLine()?.Replace("\"", "");
 
 // Returns if assembly path is null or empty.
 if (string.IsNullOrEmpty(assemblyPath)) return;
@@ -28,6 +26,14 @@ if (!assemblyFileInfo.Exists) return;
 
 // Creates obfuscator.
 var obfuscator = new Obfuscator(assemblyPath);
+
+// Logs completed obfuscation.
+obfuscator.ObfuscationCompleted += ObfuscatorObfuscationCompleted;
+
+static void ObfuscatorObfuscationCompleted(object? sender, ObfuscationCompletedEventArgs e)
+{
+    Console.WriteLine($"\t{e.ObfuscatedObjectType}: {e.InitialFullName}");
+}
 
 // Displays assembly file info.
 Console.ForegroundColor = ConsoleColor.Green;
@@ -60,7 +66,7 @@ double obfusationDurationSeconds = Math.Round(obfuscationStopWatch.Elapsed.Total
 
 // Displays seconds that obfuscation took.
 Console.ForegroundColor = ConsoleColor.Green;
-Console.WriteLine($"\tDuration :  {obfusationDurationSeconds} seconds.");
+Console.WriteLine($"\n\n\tDuration :  {obfusationDurationSeconds} seconds.");
 
 Console.ForegroundColor = ConsoleColor.Red;
 Console.Write("\n\n\tPress any key to save file...");

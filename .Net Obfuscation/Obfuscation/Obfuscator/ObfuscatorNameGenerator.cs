@@ -12,7 +12,7 @@ namespace Obfuscation;
 
 public partial class Obfuscator
 {
-    private static Random random = new();
+    private static readonly Random random = new();
     private static string GenerateObfuscatedName(NameObfuscationType type)
     {
         // Chooses obfuscated name generator.
