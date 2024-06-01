@@ -8,11 +8,16 @@ using dnlib;
 
 
 
-namespace Obfuscation;
+namespace Assembly.Obfuscation;
 
-public class Deobfuscator : AssemblyModifier
+
+public enum ObfuscatedObjectType
 {
-    public Deobfuscator(string inputAssemblyFile) : base(inputAssemblyFile) { }
-
-
+    Assembly,
+    Module,
+    Type,
+    Method,
+    Property,
+    Field,
+    Parameter
 }

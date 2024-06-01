@@ -6,6 +6,8 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Reflection.Metadata;
 
+using Assembly.Obfuscation;
+
 
 
 
@@ -13,7 +15,9 @@ Console.ForegroundColor = ConsoleColor.Yellow;
 Console.Write("\n\n\t\tInput an assembly:\n\n\t");
 
 // Gets assembly path.
-string? assemblyPath = args.Length > 0 ? args[0] : Console.ReadLine()?.Replace("\"", "");
+//string? assemblyPath = args.Length > 0 ? args[0] : Console.ReadLine()?.Replace("\"", "");
+//! TEMP CODE FOR TESTING
+string? assemblyPath = @"C:\Users\Berkay\Desktop\TempTest\Paint 2.exe";
 
 // Returns if assembly path is null or empty.
 if (string.IsNullOrEmpty(assemblyPath)) return;
@@ -57,8 +61,14 @@ var obfuscationStopWatch = Stopwatch.StartNew();
 
 Console.ForegroundColor = ConsoleColor.Cyan;
 
+// Creates obfuscating options.
+var obfuscatorOptions = new ObfuscatorOptions
+{
+    NameGenerator = new ComplexNameGenerator()
+};
+
 // Obfuscates assembly.
-obfuscator.Obfuscate();
+obfuscator.Obfuscate(obfuscatorOptions);
 
 // Calculates time that obfuscation took.
 obfuscationStopWatch.Stop();

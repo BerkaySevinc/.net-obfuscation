@@ -8,7 +8,7 @@ using dnlib;
 using dnlib.DotNet;
 using dnlib.DotNet.Writer;
 
-namespace Obfuscation;
+namespace Assembly;
 
 public abstract class AssemblyModifier
 {

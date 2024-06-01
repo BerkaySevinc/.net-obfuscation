@@ -6,18 +6,15 @@ using System.Text;
 using System.Threading.Tasks;
 using dnlib;
 
+using Assembly;
+
 
 
 namespace Obfuscation;
 
-
-public enum ObfuscatedObjectType
+public class Deobfuscator : AssemblyModifier
 {
-    Assembly,
-    Module,
+    public Deobfuscator(string inputAssemblyFile) : base(inputAssemblyFile) { }
 
-    Type,
-    Method,
-    Property,
-    Field
+
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
@@ -9,13 +10,11 @@ using System.Threading.Tasks;
 using dnlib;
 using dnlib.DotNet;
 
-namespace Obfuscation;
+namespace Assembly.Obfuscation;
 
 
-// add signiture
-// add logger (event or smth)
-// be sure that every name is different (via hashsetle etc.) e.g: https://stackoverflow.com/questions/4616685/how-to-generate-a-random-string-and-specify-the-length-you-want-or-better-gene
-// make renamer methods simpler
+// add signiture to renamer
+// be sure that every name is different for complexnamegenerator (using hashsetle etc.) e.g: https://stackoverflow.com/questions/4616685/how-to-generate-a-random-string-and-specify-the-length-you-want-or-better-gene
 
 public partial class Obfuscator : AssemblyModifier
 {
@@ -32,29 +31,38 @@ public partial class Obfuscator : AssemblyModifier
     {
         // Creates default options if given is null.
         options ??= new ObfuscatorOptions();
+        var nameGenerator = options.NameGenerator;
 
         // Obfuscates assembly name.
         if (options.ObfuscateAssemblyName)
-            ObfuscateAssemblyName(options);
+            ObfuscateAssemblyName(nameGenerator);
 
         // Obfuscates module names.
         if (options.ObfuscateModuleNames)
-            ObfuscateModuleNames(options);
+            ObfuscateModuleNames(nameGenerator);
 
         // Obfuscates type names.
         if (options.ObfuscateTypeNames)
-            ObfuscateTypeNames(options);
+            ObfuscateTypeNames(nameGenerator);
 
         // Obfuscates method names.
         if (options.ObfuscateMethodNames)
-            ObfuscateMethodNames(options);
+            ObfuscateMethodNames(nameGenerator);
 
         // Obfuscates field names.
         if (options.ObfuscateFieldNames)
-            ObfuscateFieldNames(options);
+            ObfuscateFieldNames(nameGenerator);
 
         // Obfuscates property names.
         if (options.ObfuscatePropertyNames)
-            ObfuscatePropertyNames(options);
+            ObfuscatePropertyNames(nameGenerator);
+
+        // Obfuscates parameter names.
+        if (options.ObfuscateParameterNames)
+            ObfuscateParameterNames(nameGenerator);
+
+        // Resets obfuscated name generator.
+        options.NameGenerator.Reset();
+
     }
 }
