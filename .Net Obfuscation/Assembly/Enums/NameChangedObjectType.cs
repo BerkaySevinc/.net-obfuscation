@@ -8,10 +8,10 @@ using dnlib;
 
 
 
-namespace Assembly.Obfuscation;
+namespace Assembly;
 
 
-public enum ObfuscatedObjectType
+public enum NameChangedObjectType
 {
     Assembly,
     Module,

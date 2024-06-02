@@ -24,4 +24,8 @@ public class ObfuscatorOptions
 
     public bool ObfuscateParameterNames { get; set; } = true;
 
+
+    public bool ObfuscateStringValues { get; set; } = true;
+
+
 }

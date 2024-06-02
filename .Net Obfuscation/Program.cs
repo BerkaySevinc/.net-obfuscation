@@ -6,18 +6,27 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Reflection.Metadata;
 
+using Assembly;
 using Assembly.Obfuscation;
 
 
 
 
-Console.ForegroundColor = ConsoleColor.Yellow;
-Console.Write("\n\n\t\tInput an assembly:\n\n\t");
 
 // Gets assembly path.
-//string? assemblyPath = args.Length > 0 ? args[0] : Console.ReadLine()?.Replace("\"", "");
+string? assemblyPath;
 //! TEMP CODE FOR TESTING
-string? assemblyPath = @"C:\Users\Berkay\Desktop\TempTest\Paint 2.exe";
+assemblyPath = @"C:\Users\Berkay\Desktop\TempTest\Paint 2.exe";
+
+//if (args.Length > 0) assemblyPath = args[0];
+//else
+//{
+//    Console.ForegroundColor = ConsoleColor.Red;
+//    Console.Write("\n\n\t\tInput an assembly:\n\n\t");
+//    Console.ForegroundColor = ConsoleColor.Yellow;
+
+//    assemblyPath = Console.ReadLine()?.Replace("\"", "");
+//}
 
 // Returns if assembly path is null or empty.
 if (string.IsNullOrEmpty(assemblyPath)) return;
@@ -31,12 +40,18 @@ if (!assemblyFileInfo.Exists) return;
 // Creates obfuscator.
 var obfuscator = new Obfuscator(assemblyPath);
 
-// Logs completed obfuscation.
-obfuscator.ObfuscationCompleted += ObfuscatorObfuscationCompleted;
+// Logs completed obfuscations.
+obfuscator.NameChanged += ObfuscatorNameChanged;
+obfuscator.ValueModified += ObfuscatorValueModified;
 
-static void ObfuscatorObfuscationCompleted(object? sender, ObfuscationCompletedEventArgs e)
+static void ObfuscatorNameChanged(object? sender, NameChangedEventArgs e)
 {
-    Console.WriteLine($"\t{e.ObfuscatedObjectType}: {e.InitialFullName}");
+    Console.WriteLine($"\t{e.ObjectType}: {e.InitialName}");
+}
+static void ObfuscatorValueModified(object? sender, ValueModifiedEventArgs e)
+{
+    Console.WriteLine($"\t{e.ObjectType}: {e.InitialValue}");
+
 }
 
 // Displays assembly file info.
@@ -47,9 +62,27 @@ Console.WriteLine(assemblyFileInfo.Name);
 
 // Displays assembly info.
 Console.ForegroundColor = ConsoleColor.Green;
-Console.Write("\tAssembly :  ");
+Console.Write("\n\tAssembly :  ");
 Console.ForegroundColor = ConsoleColor.Blue;
 Console.WriteLine(obfuscator.Assembly.FullName);
+
+// Displays resolved dependencies.
+Console.ForegroundColor = ConsoleColor.Green;
+Console.WriteLine("\n\tModules:");
+Console.ForegroundColor = ConsoleColor.Blue;
+foreach (var module in obfuscator.Assembly.Modules)
+{
+    Console.WriteLine($"\t- {module.Name}");
+}
+
+// Displays dependencies.
+Console.ForegroundColor = ConsoleColor.Green;
+Console.WriteLine("\n\tDependencies:");
+Console.ForegroundColor = ConsoleColor.Blue;
+foreach (var assembly in obfuscator.GetAllDependencies())
+{
+    Console.WriteLine($"\t- {assembly.Name}");
+}
 
 Console.ForegroundColor = ConsoleColor.Red;
 Console.Write("\n\n\tPress any key to start obfuscation...");
@@ -76,12 +109,15 @@ double obfusationDurationSeconds = Math.Round(obfuscationStopWatch.Elapsed.Total
 
 // Displays seconds that obfuscation took.
 Console.ForegroundColor = ConsoleColor.Green;
-Console.WriteLine($"\n\n\tDuration :  {obfusationDurationSeconds} seconds.");
+Console.Write($"\n\n\tDuration :  ");
+Console.ForegroundColor = ConsoleColor.Yellow;
+Console.WriteLine($"{obfusationDurationSeconds} seconds.");
+
 
 Console.ForegroundColor = ConsoleColor.Red;
 Console.Write("\n\n\tPress any key to save file...");
 Console.ReadKey();
-Console.WriteLine("\n");
+Console.WriteLine("\n\n");
 
 Console.ForegroundColor = ConsoleColor.Cyan;
 Console.Write("\tSaving file...");
@@ -98,10 +134,9 @@ obfuscator.SaveAssemblyFile(outputFile);
 
 // Displays output file info.
 Console.ForegroundColor = ConsoleColor.Green;
-Console.Write("\n\n\tOutput :  ");
+Console.Write("\n\n\n\tOutput :  ");
 Console.ForegroundColor = ConsoleColor.Blue;
 Console.WriteLine(outputFileName);
 
 
 Console.ReadKey();
-

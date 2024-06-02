@@ -16,53 +16,73 @@ namespace Assembly.Obfuscation;
 // add signiture to renamer
 // be sure that every name is different for complexnamegenerator (using hashsetle etc.) e.g: https://stackoverflow.com/questions/4616685/how-to-generate-a-random-string-and-specify-the-length-you-want-or-better-gene
 
-public partial class Obfuscator : AssemblyModifier
+// ( encoderda encoding type vs. her method çağırıldığında oluşturulmasın, methodun dışına taşı fieldda dursun)
+// namegeneratorlarda set edilebilir yap propları, onlyxin ismini değişip OneLetter fln yap
+// selectmany methodunu kullan
+
+public class Obfuscator : AssemblyModifier
 {
     public Obfuscator(string inputAssemblyFile) : base(inputAssemblyFile) { }
 
 
-    public event EventHandler<ObfuscationCompletedEventArgs>? ObfuscationCompleted;
+    public event EventHandler<NameChangedEventArgs>? NameChanged;
+    public event EventHandler<ValueModifiedEventArgs>? ValueModified;
 
-    protected virtual void OnObfuscationCompleted(ObfuscationCompletedEventArgs e) =>
-        ObfuscationCompleted?.Invoke(this, e);
+
+    protected virtual void OnNameChanged(NameChangedEventArgs e) =>
+        NameChanged?.Invoke(this, e);
+    protected virtual void OnValueModified(ValueModifiedEventArgs e) =>
+        ValueModified?.Invoke(this, e);
 
 
     public void Obfuscate(ObfuscatorOptions? options = null)
     {
         // Creates default options if given is null.
         options ??= new ObfuscatorOptions();
-        var nameGenerator = options.NameGenerator;
+
+        // Creates renamer.
+        var renamer = new ObfuscatorRenamer(Assembly, options.NameGenerator);
+        renamer.NameChanged += NameChanged;
+
+        // Creates value modifier.
+        var valueModifier = new ObfuscatorValueModifier(Assembly);
+        valueModifier.ValueModified += ValueModified;
 
         // Obfuscates assembly name.
         if (options.ObfuscateAssemblyName)
-            ObfuscateAssemblyName(nameGenerator);
+            renamer.ObfuscateAssemblyName();
 
         // Obfuscates module names.
         if (options.ObfuscateModuleNames)
-            ObfuscateModuleNames(nameGenerator);
+            renamer.ObfuscateModuleNames();
 
         // Obfuscates type names.
         if (options.ObfuscateTypeNames)
-            ObfuscateTypeNames(nameGenerator);
+            renamer.ObfuscateTypeNames();
 
         // Obfuscates method names.
         if (options.ObfuscateMethodNames)
-            ObfuscateMethodNames(nameGenerator);
+            renamer.ObfuscateMethodNames();
 
         // Obfuscates field names.
         if (options.ObfuscateFieldNames)
-            ObfuscateFieldNames(nameGenerator);
+            renamer.ObfuscateFieldNames();
 
         // Obfuscates property names.
         if (options.ObfuscatePropertyNames)
-            ObfuscatePropertyNames(nameGenerator);
+            renamer.ObfuscatePropertyNames();
 
         // Obfuscates parameter names.
         if (options.ObfuscateParameterNames)
-            ObfuscateParameterNames(nameGenerator);
+            renamer.ObfuscateParameterNames();
 
         // Resets obfuscated name generator.
         options.NameGenerator.Reset();
+
+
+        // Encodes string values.
+        if (options.ObfuscateStringValues)
+            valueModifier.EncodeStringValues();
 
     }
 }

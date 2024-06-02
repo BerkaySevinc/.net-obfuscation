@@ -8,7 +8,7 @@ using dnlib;
 using dnlib.DotNet;
 
 
-namespace Assembly.Obfuscation;
+namespace Assembly;
 
 
 public abstract class NameGenerator
