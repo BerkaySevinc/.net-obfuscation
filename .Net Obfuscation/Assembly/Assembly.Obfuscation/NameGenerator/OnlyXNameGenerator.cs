@@ -9,13 +9,20 @@ using dnlib.DotNet;
 
 namespace Assembly.Obfuscation;
 
-public class OnlyXNameGenerator : NameGenerator
+public class OneLetterNameGenerator : NameGenerator
 {
 
-    private const char SelectedCharLower = 'x';
-
-    private static readonly char SelectedCharUpper = char.ToUpper(SelectedCharLower);
-
+    private char _letterLowerCase = 'x';
+    private char _letterUpperCase = 'X';
+    public char Letter
+    {
+        get => _letterLowerCase;
+        set
+        {
+            _letterLowerCase = char.ToLower(value);
+            _letterUpperCase = char.ToUpper(value);
+        }
+    }
 
     private int generatedNameCount = 0;
     public override string GenerateName()
@@ -28,9 +35,9 @@ public class OnlyXNameGenerator : NameGenerator
         string binaryCombination = Convert.ToString(indexOfChars, 2);
 
         string generatedName = binaryCombination
-            .Replace('0', SelectedCharLower)
-            .Replace('1', SelectedCharUpper)
-            .PadLeft(charCount, SelectedCharLower);
+            .Replace('0', _letterLowerCase)
+            .Replace('1', _letterUpperCase)
+            .PadLeft(charCount, _letterLowerCase);
 
         generatedNameCount++;
 

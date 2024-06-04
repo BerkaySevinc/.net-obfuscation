@@ -15,10 +15,10 @@ public abstract class AssemblyModifier
 {
     public AssemblyDef Assembly { get; }
 
-    public AssemblyModifier(string inputAssemblyFile)
-    {
-        Assembly = AssemblyDef.Load(inputAssemblyFile);
-    }
+
+    public AssemblyModifier(AssemblyDef assembly) => Assembly = assembly;
+    public AssemblyModifier(string inputAssemblyFile) : this(AssemblyDef.Load(inputAssemblyFile)) { }
+
 
     public IEnumerable<AssemblyDef> GetAllDependencies() =>
         Assembly.Modules.SelectMany(GetModuleDependencies);

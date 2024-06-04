@@ -13,12 +13,6 @@ using dnlib.DotNet;
 namespace Assembly.Obfuscation;
 
 
-// add signiture to renamer
-// be sure that every name is different for complexnamegenerator (using hashsetle etc.) e.g: https://stackoverflow.com/questions/4616685/how-to-generate-a-random-string-and-specify-the-length-you-want-or-better-gene
-
-// ( encoderda encoding type vs. her method çağırıldığında oluşturulmasın, methodun dışına taşı fieldda dursun)
-// namegeneratorlarda set edilebilir yap propları, onlyxin ismini değişip OneLetter fln yap
-// selectmany methodunu kullan
 
 public class Obfuscator : AssemblyModifier
 {
@@ -40,6 +34,7 @@ public class Obfuscator : AssemblyModifier
         // Creates default options if given is null.
         options ??= new ObfuscatorOptions();
 
+
         // Creates renamer.
         var renamer = new ObfuscatorRenamer(Assembly, options.NameGenerator);
         renamer.NameChanged += NameChanged;
@@ -47,6 +42,7 @@ public class Obfuscator : AssemblyModifier
         // Creates value modifier.
         var valueModifier = new ObfuscatorValueModifier(Assembly);
         valueModifier.ValueModified += ValueModified;
+
 
         // Obfuscates assembly name.
         if (options.ObfuscateAssemblyName)

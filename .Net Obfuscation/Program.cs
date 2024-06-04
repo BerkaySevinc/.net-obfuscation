@@ -11,8 +11,6 @@ using Assembly.Obfuscation;
 
 
 
-
-
 // Gets assembly path.
 string? assemblyPath;
 //! TEMP CODE FOR TESTING

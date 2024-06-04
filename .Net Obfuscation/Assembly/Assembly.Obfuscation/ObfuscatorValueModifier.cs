@@ -17,13 +17,6 @@ public class ObfuscatorValueModifier : ValueModifier
     public ObfuscatorValueModifier(AssemblyDef assembly) : base(assembly) { }
 
 
-
-    public event EventHandler<ValueModifiedEventArgs>? ValueModified;
-
-    protected virtual void OnValueModified(ValueModifiedEventArgs e) =>
-        ValueModified?.Invoke(this, e);
-
-
     public void EncodeStringValues()
     {
         foreach (var module in Assembly.Modules)
@@ -47,56 +40,55 @@ public class ObfuscatorValueModifier : ValueModifier
                     nameof(Encoding.UTF8.GetString),
                     MethodSig.CreateInstance(module.CorLibTypes.String, new SZArraySig(module.CorLibTypes.Byte)));
 
-            foreach (var type in module.Types)
-                foreach (var method in type.Methods)
+            foreach (var method in module.Types.SelectMany(t => t.Methods))
+            {
+                // Continues if method doesn't have body or instructions.
+                if (!method.HasBody || !method.Body.HasInstructions) continue;
+
+                var body = method.Body;
+
+                for (int i = 0; i < body.Instructions.Count; i++)
                 {
-                    // Continues if method doesn't have body or instructions.
-                    if (!method.HasBody || !method.Body.HasInstructions) continue;
+                    Instruction instruction = body.Instructions[i];
 
-                    var body = method.Body;
+                    // Continues if the instruction is not a string.
+                    if (instruction.OpCode != OpCodes.Ldstr) continue;
 
-                    for (int i = 0; i < body.Instructions.Count; i++)
-                    {
-                        Instruction instruction = body.Instructions[i];
+                    // Gets string value.
+                    string? value = instruction.Operand.ToString();
 
-                        // Continues if the instruction is not a string.
-                        if (instruction.OpCode != OpCodes.Ldstr) continue;
+                    if (value is null) continue;
 
-                        // Gets string value.
-                        string? value = instruction.Operand.ToString();
+                    // Gets encoded value.
+                    string encodedValue = Convert.ToBase64String(Encoding.UTF8.GetBytes(value));
 
-                        if (value is null) continue;
+                    // Creates decoder instructions.
+                    instruction.OpCode = OpCodes.Nop;
 
-                        // Gets encoded value.
-                        string encodedValue = Convert.ToBase64String(Encoding.UTF8.GetBytes(value));
+                    body.Instructions.Insert(++i,
+                        new(
+                            OpCodes.Call,
+                            module.Import(methodUTF8Get)));
 
-                        // Creates decoder instructions.
-                        instruction.OpCode = OpCodes.Nop;
+                    body.Instructions.Insert(++i,
+                        new(
+                            OpCodes.Ldstr,
+                            encodedValue));
 
-                        body.Instructions.Insert(++i,
-                            new(
-                                OpCodes.Call,
-                                module.Import(methodUTF8Get)));
+                    body.Instructions.Insert(++i,
+                        new(
+                            OpCodes.Call,
+                            module.Import(methodFromBase64String)));
 
-                        body.Instructions.Insert(++i,
-                            new(
-                                OpCodes.Ldstr,
-                                encodedValue));
+                    body.Instructions.Insert(++i,
+                        new(
+                            OpCodes.Callvirt,
+                            module.Import(methodGetString)));
 
-                        body.Instructions.Insert(++i,
-                            new(
-                                OpCodes.Call,
-                                module.Import(methodFromBase64String)));
-
-                        body.Instructions.Insert(++i,
-                            new(
-                                OpCodes.Callvirt,
-                                module.Import(methodGetString)));
-
-                        var args = new ValueModifiedEventArgs(ValueModifiedObjectType.String, value);
-                        OnValueModified(args);
-                    }
+                    var args = new ValueModifiedEventArgs(ValueModifiedObjectType.String, value);
+                    OnValueModified(args);
                 }
+            }
         }
     }
 }
