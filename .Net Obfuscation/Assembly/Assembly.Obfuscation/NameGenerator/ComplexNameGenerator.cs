@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using dnlib;
@@ -20,12 +21,34 @@ public class ComplexNameGenerator : NameGenerator
         + "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         + "_";
 
-    public int ComplexNameAverageLength { get; set; } = 20;
-    public int ComplexNameLengthDeviation { get; set; } = 5;
 
+    private int _complexNameMinLength;
+    private int _complexNameMaxLength;
+
+    private int _complexNameAverageLength = 20;
+    public int ComplexNameAverageLength
+    {
+        get => _complexNameAverageLength;
+        set
+        {
+            _complexNameAverageLength = value;
+            SetNameLengths();
+        }
+    }
+    public int ComplexNameLengthDeviation
+    {
+        get => complexNameLengthDeviation;
+        set
+        {
+            complexNameLengthDeviation = value;
+            SetNameLengths();
+        }
+    }
 
     private char[]? _signatureAsArray;
     private string? _signature;
+    private int complexNameLengthDeviation = 5;
+
     public string? Signature
     {
         get => _signature;
@@ -37,16 +60,15 @@ public class ComplexNameGenerator : NameGenerator
     }
 
 
+    public ComplexNameGenerator() : base() => SetNameLengths();
+
+
 
     private static readonly Random random = new();
-    public override string GenerateName()
+    public override string GenerateName(IDnlibDef? target)
     {
-        // Calculates min-max name lengths.
-        int ComplexNameMinLength = ComplexNameAverageLength - ComplexNameLengthDeviation;
-        int ComplexNameMaxLength = ComplexNameAverageLength + ComplexNameLengthDeviation;
-
         // Gets random name length.
-        int nameLength = random.Next(ComplexNameMinLength, ComplexNameMaxLength + 1);
+        int nameLength = random.Next(_complexNameMinLength, _complexNameMaxLength + 1);
 
         // Creates random name.
         var chars = new char[nameLength];
@@ -90,6 +112,13 @@ public class ComplexNameGenerator : NameGenerator
         var generatedName = new string(chars);
 
         return generatedName;
+    }
+
+    private void SetNameLengths()
+    {
+        // Calculates min-max name lengths.
+        _complexNameMinLength = ComplexNameAverageLength - ComplexNameLengthDeviation;
+        _complexNameMaxLength = ComplexNameAverageLength + ComplexNameLengthDeviation;
     }
 
     public override void Reset() { }

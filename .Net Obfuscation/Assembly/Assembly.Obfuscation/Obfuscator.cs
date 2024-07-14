@@ -13,6 +13,13 @@ using dnlib.DotNet;
 namespace Assembly.Obfuscation;
 
 
+// TODO: better EventArgs (ResultName prop, parent prop for some of EventArgs)
+// TODO: obfuscationType prop (name, value, junk vs.) for events, so logger can know what type is it
+// TODO: check special cases like IsRuntimeSpecial etc. for NameGenerators, ValueModifiers, MemberGenerators etc.
+// TODO: namespace obfuscation or hidden namespace, and junk namespaces
+
+
+
 
 public class Obfuscator : AssemblyModifier
 {
@@ -21,12 +28,15 @@ public class Obfuscator : AssemblyModifier
 
     public event EventHandler<NameChangedEventArgs>? NameChanged;
     public event EventHandler<ValueModifiedEventArgs>? ValueModified;
+    public event EventHandler<MemberGeneratedEventArgs>? MemberGenerated;
 
 
     protected virtual void OnNameChanged(NameChangedEventArgs e) =>
         NameChanged?.Invoke(this, e);
     protected virtual void OnValueModified(ValueModifiedEventArgs e) =>
         ValueModified?.Invoke(this, e);
+    protected virtual void OnMemberGenerated(MemberGeneratedEventArgs e) =>
+        MemberGenerated?.Invoke(this, e);
 
 
     public void Obfuscate(ObfuscatorOptions? options = null)
@@ -34,15 +44,39 @@ public class Obfuscator : AssemblyModifier
         // Creates default options if given is null.
         options ??= new ObfuscatorOptions();
 
+        // Generates junks.
+        GenerateJunks(options);
+
+        // Obfuscates values.
+        ObfuscateValues(options);
+
+        // Obfuscates names.
+        ObfuscateNames(options);
+    }
+
+    private void GenerateJunks(ObfuscatorOptions options)
+    {
+        // Gets & resets name generator.
+        NameGenerator junkNameGenerator = options.JunkNameGenerator;
+        junkNameGenerator.Reset();
+
+        // Creates junk generator.
+        var junkGenerator = new JunkGenerator(Assembly, junkNameGenerator);
+        junkGenerator.MemberGenerated += MemberGenerated;
+
+        // Generates junk fields.
+        junkGenerator.GenerateField(options.JunkFieldCount);
+    }
+
+    private void ObfuscateNames(ObfuscatorOptions options)
+    {
+        // Gets & resets name generator.
+        NameGenerator obfuscatedNameGenerator = options.ObfuscatedNameGenerator;
+        obfuscatedNameGenerator.Reset();
 
         // Creates renamer.
-        var renamer = new ObfuscatorRenamer(Assembly, options.NameGenerator);
+        var renamer = new NameObfuscator(Assembly, obfuscatedNameGenerator);
         renamer.NameChanged += NameChanged;
-
-        // Creates value modifier.
-        var valueModifier = new ObfuscatorValueModifier(Assembly);
-        valueModifier.ValueModified += ValueModified;
-
 
         // Obfuscates assembly name.
         if (options.ObfuscateAssemblyName)
@@ -68,17 +102,26 @@ public class Obfuscator : AssemblyModifier
         if (options.ObfuscatePropertyNames)
             renamer.ObfuscatePropertyNames();
 
+        // Obfuscates event names.
+        if (options.ObfuscateEventNames)
+            renamer.ObfuscateEventNames();
+
         // Obfuscates parameter names.
         if (options.ObfuscateParameterNames)
             renamer.ObfuscateParameterNames();
 
-        // Resets obfuscated name generator.
-        options.NameGenerator.Reset();
+        // Resets name generator.
+        obfuscatedNameGenerator.Reset();
+    }
 
+    private void ObfuscateValues(ObfuscatorOptions options)
+    {
+        // Creates value modifier.
+        var valueModifier = new ValueObfuscator(Assembly);
+        valueModifier.ValueModified += ValueModified;
 
-        // Encodes string values.
+        // Obfuscates string values.
         if (options.ObfuscateStringValues)
             valueModifier.EncodeStringValues();
-
     }
 }

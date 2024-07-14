@@ -7,20 +7,20 @@ using System.Threading.Tasks;
 using dnlib;
 using dnlib.DotNet;
 
-
 namespace Assembly.Obfuscation;
 
 
-public class ObfuscatorRenamer : Renamer
+
+public class NameObfuscator : Renamer
 {
-    public ObfuscatorRenamer(AssemblyDef assembly, NameGenerator nameGenerator) : base(assembly, nameGenerator) { }
+    public NameObfuscator(AssemblyDef assembly, NameGenerator nameGenerator) : base(assembly, nameGenerator) { }
 
 
     public void ObfuscateAssemblyName()
     {
         NameGenerator.Reset();
 
-        ObfuscateObjectNameDefault(NameChangedObjectType.Assembly, Assembly);
+        ObfuscateMemberNameDefault(MemberObjectType.Assembly, Assembly);
     }
 
 
@@ -30,7 +30,7 @@ public class ObfuscatorRenamer : Renamer
 
         foreach (var module in Assembly.Modules)
         {
-            ObfuscateObjectNameDefault(NameChangedObjectType.Module, module);
+            ObfuscateMemberNameDefault(MemberObjectType.Module, module);
         }
     }
 
@@ -43,12 +43,13 @@ public class ObfuscatorRenamer : Renamer
 
             foreach (var type in module.Types)
             {
+                // Skips special cases
                 if (type.IsSpecialName) continue;
 
                 string initialName = type.Name;
                 string initialFullName = type.FullName;
 
-                string obfuscatedName = NameGenerator.GenerateName();
+                string obfuscatedName = NameGenerator.GenerateName(type);
 
                 type.Name = obfuscatedName;
 
@@ -65,13 +66,13 @@ public class ObfuscatorRenamer : Renamer
                     foreach (Resource resource in referancedModule.Resources)
                     {
                         if (!resource.Name.Contains(".")) continue;
-                        if (resource.Name.ToString()[..resource.Name.IndexOf(".")] != initialFullName) continue;
+                        if (resource.Name.ToString()[..resource.Name.LastIndexOf(".")] != initialFullName) continue;
 
                         resource.Name = resource.Name.Replace(initialName, obfuscatedName);
                     }
                 }
 
-                var args = new NameChangedEventArgs(NameChangedObjectType.Type, type, initialName);
+                var args = new NameChangedEventArgs(MemberObjectType.Type, type, initialName);
                 OnNameChanged(args);
             }
         }
@@ -87,7 +88,7 @@ public class ObfuscatorRenamer : Renamer
             {
                 if (method.IsSpecialName) continue;
 
-                ObfuscateObjectNameDefault(NameChangedObjectType.Method, method);
+                ObfuscateMemberNameDefault(MemberObjectType.Method, method);
             }
         }
     }
@@ -102,7 +103,7 @@ public class ObfuscatorRenamer : Renamer
             {
                 if (field.IsSpecialName) continue;
 
-                ObfuscateObjectNameDefault(NameChangedObjectType.Field, field);
+                ObfuscateMemberNameDefault(MemberObjectType.Field, field);
             }
         }
     }
@@ -118,40 +119,55 @@ public class ObfuscatorRenamer : Renamer
             {
                 if (property.IsSpecialName) continue;
 
-                ObfuscateObjectNameDefault(NameChangedObjectType.Property, property);
+                ObfuscateMemberNameDefault(MemberObjectType.Property, property);
+            }
+        }
+    }
+
+    public void ObfuscateEventNames()
+    {
+        foreach (var type in Assembly.Modules.SelectMany(m => m.Types))
+        {
+            NameGenerator.Reset();
+
+            foreach (var eventDef in type.Events)
+            {
+                if (eventDef.IsSpecialName) continue;
+
+                ObfuscateMemberNameDefault(MemberObjectType.Event, eventDef);
+            }
+        }
+    }
+
+    public void ObfuscateParameterNames()
+    {
+        foreach (var method in Assembly.Modules.SelectMany(m => m.Types).SelectMany(t => t.Methods))
+        {
+            NameGenerator.Reset();
+
+            foreach (var parameter in method.ParamDefs)
+            {
+                string initialName = parameter.Name;
+
+                string obfuscatedName = NameGenerator.GenerateName();
+                parameter.Name = obfuscatedName;
+
+                var args = new NameChangedEventArgs(MemberObjectType.Parameter, null, initialName);
+                OnNameChanged(args);
             }
         }
     }
 
 
-    public void ObfuscateParameterNames()
-    {
-        foreach (var method in Assembly.Modules.SelectMany(m => m.Types).SelectMany(t => t.Methods))
-            {
-                NameGenerator.Reset();
 
-                foreach (var parameter in method.Parameters.Where(p => p.HasParamDef).Select(p => p.ParamDef))
-                {
-                    string initialName = parameter.Name;
-
-                    string obfuscatedName = NameGenerator.GenerateName();
-                    parameter.Name = obfuscatedName;
-
-                    var args = new NameChangedEventArgs(NameChangedObjectType.Parameter, null, initialName);
-                    OnNameChanged(args);
-                }
-            }
-    }
-
-
-    public void ObfuscateObjectNameDefault(NameChangedObjectType obfuscatedObjectType, IDnlibDef target)
+    public void ObfuscateMemberNameDefault(MemberObjectType objectType, IDnlibDef target)
     {
         string initialName = target.Name;
 
-        string obfuscatedName = NameGenerator.GenerateName();
+        string obfuscatedName = NameGenerator.GenerateName(target);
         target.Name = obfuscatedName;
 
-        var args = new NameChangedEventArgs(obfuscatedObjectType, target, initialName);
+        var args = new NameChangedEventArgs(objectType, target, initialName);
         OnNameChanged(args);
     }
 }

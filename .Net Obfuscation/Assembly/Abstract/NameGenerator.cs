@@ -13,7 +13,10 @@ namespace Assembly;
 
 public abstract class NameGenerator
 {
-    public abstract string GenerateName();
+    public NameGenerator() { }
+
+    public abstract string GenerateName(IDnlibDef? target);
+    public virtual string GenerateName() => GenerateName(null);
 
     public abstract void Reset();
 }

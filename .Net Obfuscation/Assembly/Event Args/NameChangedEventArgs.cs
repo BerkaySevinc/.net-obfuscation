@@ -13,12 +13,12 @@ namespace Assembly;
 
 public class NameChangedEventArgs : EventArgs
 {
-    public NameChangedObjectType ObjectType { get; }
+    public MemberObjectType ObjectType { get; }
     public IDnlibDef? Object { get; }
 
     public string InitialName { get; }
 
-    public NameChangedEventArgs(NameChangedObjectType objectType, IDnlibDef? @object, string initialName)
+    public NameChangedEventArgs(MemberObjectType objectType, IDnlibDef? @object, string initialName)
     {
         ObjectType = objectType;
         Object = @object;

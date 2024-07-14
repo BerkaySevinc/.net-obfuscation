@@ -11,10 +11,13 @@ using dnlib.DotNet.Emit;
 namespace Assembly.Obfuscation;
 
 
-public class ObfuscatorValueModifier : ValueModifier
+// UNDONE: value encoders just encodes method body local variables, not encoding props, fields etc.?
+
+
+public class ValueObfuscator : ValueModifier
 {
 
-    public ObfuscatorValueModifier(AssemblyDef assembly) : base(assembly) { }
+    public ValueObfuscator(AssemblyDef assembly) : base(assembly) { }
 
 
     public void EncodeStringValues()
@@ -46,6 +49,7 @@ public class ObfuscatorValueModifier : ValueModifier
                 if (!method.HasBody || !method.Body.HasInstructions) continue;
 
                 var body = method.Body;
+                body.SimplifyBranches();
 
                 for (int i = 0; i < body.Instructions.Count; i++)
                 {
@@ -85,7 +89,7 @@ public class ObfuscatorValueModifier : ValueModifier
                             OpCodes.Callvirt,
                             module.Import(methodGetString)));
 
-                    var args = new ValueModifiedEventArgs(ValueModifiedObjectType.String, value);
+                    var args = new ValueModifiedEventArgs(ValueObjectType.String, value);
                     OnValueModified(args);
                 }
             }

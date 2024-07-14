@@ -24,14 +24,17 @@ public class OneLetterNameGenerator : NameGenerator
         }
     }
 
+
     private int generatedNameCount = 0;
-    public override string GenerateName()
+    public override string GenerateName(IDnlibDef? target)
     {
+        // Calculates name info.
         int charCount = (int)Math.Log2(generatedNameCount + 2);
 
         int firstOfChars = (int)Math.Pow(2, charCount) - 2;
         int indexOfChars = generatedNameCount - firstOfChars;
 
+        // Creates name.
         string binaryCombination = Convert.ToString(indexOfChars, 2);
 
         string generatedName = binaryCombination

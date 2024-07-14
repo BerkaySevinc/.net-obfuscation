@@ -11,7 +11,16 @@ using dnlib;
 namespace Assembly;
 
 
-public enum ValueModifiedObjectType
+public enum MemberObjectType
 {
-    String
+    Assembly,
+    Module,
+    Type,
+    Method,
+    Field,
+    Property,
+    Event,
+    Parameter,
+
+    Other
 }

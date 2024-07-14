@@ -11,13 +11,9 @@ using dnlib;
 namespace Assembly;
 
 
-public enum NameChangedObjectType
+public enum ValueObjectType
 {
-    Assembly,
-    Module,
-    Type,
-    Method,
-    Property,
-    Field,
-    Parameter
+    String,
+
+    Other
 }

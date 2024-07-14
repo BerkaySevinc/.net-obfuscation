@@ -11,18 +11,18 @@ using dnlib.DotNet;
 namespace Assembly;
 
 
-public abstract class Renamer
+public abstract class MemberGenerator
 {
     public AssemblyDef Assembly { get; }
     public NameGenerator NameGenerator { get; set; }
 
 
-    public Renamer(AssemblyDef assembly, NameGenerator nameGenerator) =>
+    public MemberGenerator(AssemblyDef assembly, NameGenerator nameGenerator) =>
         (Assembly, NameGenerator) = (assembly, nameGenerator);
 
 
-    public event EventHandler<NameChangedEventArgs>? NameChanged;
+    public event EventHandler<MemberGeneratedEventArgs>? MemberGenerated;
 
-    protected virtual void OnNameChanged(NameChangedEventArgs e) =>
-        NameChanged?.Invoke(this, e);
+    protected virtual void OnMemberGenerated(MemberGeneratedEventArgs e) =>
+        MemberGenerated?.Invoke(this, e);
 }

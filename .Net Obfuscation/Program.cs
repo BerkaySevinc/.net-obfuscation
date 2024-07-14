@@ -10,21 +10,24 @@ using Assembly;
 using Assembly.Obfuscation;
 
 
+// TODO: take options as an input from user
+// TODO: better logs
+// TODO: WriteLineColored(text, color) like method, for Console.WriteLine with text color parameter
+
+
 
 // Gets assembly path.
 string? assemblyPath;
-//! TEMP CODE FOR TESTING
-assemblyPath = @"C:\Users\Berkay\Desktop\TempTest\Paint 2.exe";
 
-//if (args.Length > 0) assemblyPath = args[0];
-//else
-//{
-//    Console.ForegroundColor = ConsoleColor.Red;
-//    Console.Write("\n\n\t\tInput an assembly:\n\n\t");
-//    Console.ForegroundColor = ConsoleColor.Yellow;
+if (args.Length > 0) assemblyPath = args[0];
+else
+{
+    Console.ForegroundColor = ConsoleColor.Red;
+    Console.Write("\n\n\t\tInput an assembly:\n\n\t");
+    Console.ForegroundColor = ConsoleColor.Yellow;
 
-//    assemblyPath = Console.ReadLine()?.Replace("\"", "");
-//}
+    assemblyPath = Console.ReadLine()?.Replace("\"", "");
+}
 
 // Returns if assembly path is null or empty.
 if (string.IsNullOrEmpty(assemblyPath)) return;
@@ -39,17 +42,21 @@ if (!assemblyFileInfo.Exists) return;
 var obfuscator = new Obfuscator(assemblyPath);
 
 // Logs completed obfuscations.
-obfuscator.NameChanged += ObfuscatorNameChanged;
+obfuscator.MemberGenerated += ObfuscatorMemberGenerated;
 obfuscator.ValueModified += ObfuscatorValueModified;
+obfuscator.NameChanged += ObfuscatorNameChanged;
 
-static void ObfuscatorNameChanged(object? sender, NameChangedEventArgs e)
+static void ObfuscatorMemberGenerated(object? sender, MemberGeneratedEventArgs e)
 {
-    Console.WriteLine($"\t{e.ObjectType}: {e.InitialName}");
+    Console.WriteLine($"\tJunk {e.ObjectType} Generated ({e.ParentObject.Name}): {e.Objects.Count}");
 }
 static void ObfuscatorValueModified(object? sender, ValueModifiedEventArgs e)
 {
-    Console.WriteLine($"\t{e.ObjectType}: {e.InitialValue}");
-
+    Console.WriteLine($"\t{e.ObjectType} Value Modified: {e.InitialValue}");
+}
+static void ObfuscatorNameChanged(object? sender, NameChangedEventArgs e)
+{
+    Console.WriteLine($"\t{e.ObjectType} Name Obfuscated: {e.InitialName} => {e.Object?.Name}");
 }
 
 // Displays assembly file info.
@@ -95,7 +102,23 @@ Console.ForegroundColor = ConsoleColor.Cyan;
 // Creates obfuscating options.
 var obfuscatorOptions = new ObfuscatorOptions
 {
-    NameGenerator = new ComplexNameGenerator()
+    JunkFieldCount = 10,
+
+
+    ObfuscatedNameGenerator = new ComplexNameGenerator(),
+
+    ObfuscateAssemblyName = true,
+    ObfuscateModuleNames = true,
+    ObfuscateTypeNames = true,
+
+    ObfuscateEventNames = true,
+    ObfuscateFieldNames = true,
+    ObfuscateMethodNames = true,
+    ObfuscateParameterNames = true,
+    ObfuscatePropertyNames = true,
+
+
+    ObfuscateStringValues = true,
 };
 
 // Obfuscates assembly.

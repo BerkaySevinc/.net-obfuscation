@@ -14,9 +14,10 @@ namespace Assembly;
 public abstract class AssemblyModifier
 {
     public AssemblyDef Assembly { get; }
+    public IList<ModuleDef> Modules { get; }
 
-
-    public AssemblyModifier(AssemblyDef assembly) => Assembly = assembly;
+    public AssemblyModifier(AssemblyDef assembly) =>
+        (Assembly, Modules) = (assembly, assembly.Modules);
     public AssemblyModifier(string inputAssemblyFile) : this(AssemblyDef.Load(inputAssemblyFile)) { }
 
 
@@ -33,8 +34,32 @@ public abstract class AssemblyModifier
         return resolvedDependencies;
     }
 
-    public void SaveAssemblyFile(string outputFile)
+
+    protected static IEnumerable<TypeDef> GetMatchingTypesFromModuleDependencies(ModuleDef module, string name, bool matchFullName)
     {
-        Assembly.Write(outputFile);
+        var matchingTypes =
+            GetModuleDependencies(module)
+            .SelectMany(a => a.Modules)
+            .SelectMany(m => m.Types)
+            .Where(type => (matchFullName ? type.FullName : type.Name) == name);
+
+        return matchingTypes;
     }
+    protected static IEnumerable<TypeDef> GetMatchingTypesFromModuleDependencies(ModuleDef module, string name) =>
+        GetMatchingTypesFromModuleDependencies(module, name, false);
+    protected static IEnumerable<TypeDef> GetMatchingTypesFromModuleDependencies(ModuleDef module, Type type, bool matchFullName)
+    {
+        string? nameToCompare = matchFullName ? type.FullName : type.Name;
+
+        if (nameToCompare is null) return Enumerable.Empty<TypeDef>();
+
+        return GetMatchingTypesFromModuleDependencies(module, nameToCompare, matchFullName);
+    }
+    protected static IEnumerable<TypeDef> GetMatchingTypesFromModuleDependencies(ModuleDef module, Type type) =>
+        GetMatchingTypesFromModuleDependencies(module, type, false);
+
+
+
+    public void SaveAssemblyFile(string outputFile) => 
+        Assembly.Write(outputFile);
 }

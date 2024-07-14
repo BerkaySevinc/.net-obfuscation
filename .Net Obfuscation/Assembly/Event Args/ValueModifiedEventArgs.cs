@@ -13,11 +13,11 @@ namespace Assembly;
 
 public class ValueModifiedEventArgs : EventArgs
 {
-    public ValueModifiedObjectType ObjectType { get; }
+    public ValueObjectType ObjectType { get; }
 
     public string InitialValue { get; }
 
-    public ValueModifiedEventArgs(ValueModifiedObjectType objectType, string initialValue)
+    public ValueModifiedEventArgs(ValueObjectType objectType, string initialValue)
     {
         ObjectType = objectType;
 
