@@ -24,24 +24,17 @@ public class ValueObfuscator : ValueModifier
     {
         foreach (var module in Assembly.Modules)
         {
-            // Gets needed type imports from dependencies.
-            TypeDef? encodingType = GetMatchingTypesFromModuleDependencies(module, typeof(Encoding), true).FirstOrDefault();
-            TypeDef? convertType = GetMatchingTypesFromModuleDependencies(module, typeof(Convert), true).FirstOrDefault();
+            var methodUTF8Get = module.Import(typeof(Encoding).GetProperty("UTF8")!.GetGetMethod()!);
 
-            if (encodingType is null || convertType is null) continue;
-
-            // Gets needed methods from imported types.
-            MethodDef methodUTF8Get = encodingType.FindMethod("get_UTF8");
-
-            MethodDef methodFromBase64String =
-                convertType.FindMethod(
+            var methodFromBase64String = module.Import(
+                typeof(Convert).GetMethod(
                     nameof(Convert.FromBase64String),
-                    MethodSig.CreateStatic(new SZArraySig(module.CorLibTypes.Byte), module.CorLibTypes.String));
+                    new[] { typeof(string) })!);
 
-            MethodDef methodGetString =
-                encodingType.FindMethod(
-                    nameof(Encoding.UTF8.GetString),
-                    MethodSig.CreateInstance(module.CorLibTypes.String, new SZArraySig(module.CorLibTypes.Byte)));
+            var methodGetString = module.Import(
+                typeof(Encoding).GetMethod(
+                    nameof(Encoding.GetString),
+                    new[] { typeof(byte[]) })!);
 
             foreach (var method in module.Types.SelectMany(t => t.Methods))
             {

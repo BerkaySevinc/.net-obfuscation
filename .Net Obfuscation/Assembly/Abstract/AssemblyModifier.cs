@@ -18,7 +18,7 @@ public abstract class AssemblyModifier
 
     public AssemblyModifier(AssemblyDef assembly) =>
         (Assembly, Modules) = (assembly, assembly.Modules);
-    public AssemblyModifier(string inputAssemblyFile) : this(AssemblyDef.Load(inputAssemblyFile)) { }
+    public AssemblyModifier(string inputAssemblyFile) : this(AssemblyDef.Load(inputAssemblyFile, ModuleDef.CreateModuleContext())) { }
 
 
     public IEnumerable<AssemblyDef> GetAllDependencies() =>
@@ -26,12 +26,27 @@ public abstract class AssemblyModifier
 
     public static IEnumerable<AssemblyDef> GetModuleDependencies(ModuleDef module)
     {
-        var resolver = new AssemblyResolver();
+        var ctx = module.Context;
 
-        var assemblyReferences = module.GetAssemblyRefs();
-        var resolvedDependencies = assemblyReferences.Select(r => resolver.ResolveThrow(r, module));
+        if (ctx.AssemblyResolver is not AssemblyResolver resolver)
+            return Enumerable.Empty<AssemblyDef>();
 
-        return resolvedDependencies;
+        resolver.EnableTypeDefCache = true;
+
+        resolver.PostSearchPaths.Add(
+            Path.GetDirectoryName(typeof(object).Assembly.Location)
+        );
+
+        var resolved = module.GetAssemblyRefs()
+            .Select(r =>
+            {
+                try { return resolver.Resolve(r, module); }
+                catch { return null; }
+            })
+            .Where(a => a != null)
+            .ToList();
+
+        return resolved;
     }
 
 
